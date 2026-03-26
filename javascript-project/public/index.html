@@ -36,6 +36,7 @@
     .hidden { display: none; }
     .loading { text-align: center; padding: 24px; color: #666; font-size: 14px; }
     .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #ccc; border-top-color: #185FA5; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+    .error-box { background: #FAECE7; border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #993C1D; line-height: 1.6; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
@@ -57,6 +58,11 @@
 
     <div id="loading" class="card hidden">
       <div class="loading"><span class="spinner"></span>Running tests and analyzing with AI...</div>
+    </div>
+
+    <div id="errorBox" class="card hidden">
+      <div class="section-title">Error</div>
+      <div class="error-box" id="errorMsg"></div>
     </div>
 
     <div id="results" class="hidden">
@@ -84,6 +90,7 @@
       btn.textContent = 'Running...';
       document.getElementById('loading').classList.remove('hidden');
       document.getElementById('results').classList.add('hidden');
+      document.getElementById('errorBox').classList.add('hidden');
 
       try {
         const response = await fetch('/run-tests', {
@@ -91,7 +98,17 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url })
         });
+
         const data = await response.json();
+
+        if (data.error) {
+          document.getElementById('errorMsg').textContent = data.error;
+          document.getElementById('errorBox').classList.remove('hidden');
+          document.getElementById('loading').classList.add('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Run Tests';
+          return;
+        }
 
         document.getElementById('total').textContent = data.results.length;
         document.getElementById('passed').textContent = data.passed;
@@ -109,8 +126,11 @@
         document.getElementById('aiAnalysis').textContent = data.aiAnalysis;
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('results').classList.remove('hidden');
+
       } catch (error) {
-        alert('Error: ' + error.message);
+        document.getElementById('errorMsg').textContent = error.message;
+        document.getElementById('errorBox').classList.remove('hidden');
+        document.getElementById('loading').classList.add('hidden');
       }
 
       btn.disabled = false;

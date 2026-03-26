@@ -13,63 +13,72 @@ app.post('/run-tests', async (req, res) => {
   try {
     const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const baseUrl = req.body.url || 'https://jsonplaceholder.typicode.com';
-    const results = [];
 
-    async function test(name, fn) {
-      try {
-        await fn();
-        results.push({ name, status: 'PASS', error: null });
-      } catch (error) {
-        results.push({ name, status: 'FAIL', error: error.message });
-      }
+    const discoveryResponse = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an API testing expert. Given an API base URL, return ONLY a JSON array of 5 test cases. No explanation, no markdown, just raw JSON array like this:
+[
+  {"name": "test name", "method": "GET", "path": "/endpoint", "expectedStatus": 200, "body": null},
+  {"name": "test name", "method": "POST", "path": "/endpoint", "expectedStatus": 201, "body": {"key": "value"}}
+]`
+        },
+        {
+          role: 'user',
+          content: `Generate 5 test cases for this API: ${baseUrl}. Use only public endpoints that don't require authentication. Return ONLY the JSON array.`
+        }
+      ]
+    });
+
+    let testCases = [];
+    try {
+      const raw = discoveryResponse.choices[0].message.content.trim();
+      const cleaned = raw.replace(/```json|```/g, '').trim();
+      testCases = JSON.parse(cleaned);
+    } catch (e) {
+      return res.status(500).json({ error: 'AI could not generate test cases for this API. Try a different URL.' });
     }
 
-    await test('GET /posts returns 200 and list', async () => {
-      const res = await axios.get(`${baseUrl}/posts`);
-      if (res.status !== 200) throw new Error(`Expected 200 got ${res.status}`);
-      if (!Array.isArray(res.data)) throw new Error('Expected array');
-    });
+    const results = [];
 
-    await test('GET /posts/1 returns valid post', async () => {
-      const res = await axios.get(`${baseUrl}/posts/1`);
-      if (res.status !== 200) throw new Error(`Expected 200 got ${res.status}`);
-      if (!res.data.title) throw new Error('No title found');
-    });
-
-    await test('POST /posts creates new post', async () => {
-      const res = await axios.post(`${baseUrl}/posts`, {
-        title: 'AI QA Test', body: 'Created by AI QA Tester', userId: 1
-      });
-      if (res.status !== 201) throw new Error(`Expected 201 got ${res.status}`);
-    });
-
-    await test('GET /users returns list', async () => {
-      const res = await axios.get(`${baseUrl}/users`);
-      if (res.status !== 200) throw new Error(`Expected 200 got ${res.status}`);
-      if (!Array.isArray(res.data)) throw new Error('Expected array');
-    });
-
-    await test('GET /posts/999 returns 404', async () => {
+    for (const tc of testCases) {
       try {
-        await axios.get(`${baseUrl}/posts/999`);
-        throw new Error('Expected 404 but got success');
+        let response;
+        if (tc.method === 'POST') {
+          response = await axios.post(`${baseUrl}${tc.path}`, tc.body || {}, { timeout: 8000 });
+        } else {
+          response = await axios.get(`${baseUrl}${tc.path}`, { timeout: 8000 });
+        }
+
+        if (response.status === tc.expectedStatus) {
+          results.push({ name: tc.name, status: 'PASS', error: null });
+        } else {
+          results.push({ name: tc.name, status: 'FAIL', error: `Expected ${tc.expectedStatus} got ${response.status}` });
+        }
       } catch (error) {
-        if (error.response?.status !== 404) throw new Error('Expected 404');
+        const actualStatus = error.response?.status;
+        if (actualStatus === tc.expectedStatus) {
+          results.push({ name: tc.name, status: 'PASS', error: null });
+        } else {
+          results.push({ name: tc.name, status: 'FAIL', error: error.message });
+        }
       }
-    });
+    }
 
     const passed = results.filter(r => r.status === 'PASS').length;
     const failed = results.filter(r => r.status === 'FAIL').length;
 
-    const completion = await client.chat.completions.create({
+    const analysisResponse = await client.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: 'You are an expert QA engineer. Analyze test results and give a 2-3 sentence summary with recommendations.' },
-        { role: 'user', content: `Analyze these API test results:\n${JSON.stringify(results, null, 2)}` }
+        { role: 'user', content: `API tested: ${baseUrl}\nResults:\n${JSON.stringify(results, null, 2)}` }
       ]
     });
 
-    const aiAnalysis = completion.choices[0].message.content;
+    const aiAnalysis = analysisResponse.choices[0].message.content;
     res.json({ results, passed, failed, aiAnalysis });
 
   } catch (error) {

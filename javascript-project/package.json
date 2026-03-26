@@ -1,0 +1,19 @@
+{
+  "name": "ai-api-tester",
+  "version": "1.0.0",
+  "description": "AI-powered API test automation",
+  "scripts": {
+    "test": "jest --verbose",
+    "generate": "node tests/aiGenerator.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.0.0",
+    "groq-sdk": "^1.1.1",
+    "openai": "^6.32.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

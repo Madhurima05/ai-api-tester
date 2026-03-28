@@ -33,9 +33,11 @@
     .result-item { border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
     .result-pass { background: #E1F5EE; }
     .result-fail { background: #FAECE7; }
+    .result-info { background: #EEEDFE; }
     .result-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .badge-pass { font-size: 11px; font-weight: 600; color: #0F6E56; min-width: 36px; }
     .badge-fail { font-size: 11px; font-weight: 600; color: #993C1D; min-width: 36px; }
+    .badge-info { font-size: 11px; font-weight: 600; color: #534AB7; min-width: 36px; }
     .result-name { font-size: 13px; flex: 1; }
     .status-code { font-size: 11px; padding: 2px 7px; border-radius: 6px; }
     .code-pass { background: #c8edd9; color: #0F6E56; }
@@ -46,6 +48,7 @@
     .screenshot { width: 100%; border-radius: 8px; border: 0.5px solid #e0e0d8; margin-bottom: 10px; cursor: pointer; }
     .ai-box { background: #EEEDFE; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #3C3489; line-height: 1.6; }
     .error-box { background: #FAECE7; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #993C1D; }
+    .info-box { background: #EEEDFE; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #534AB7; margin-bottom: 8px; }
     .history-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #666; padding: 8px 0; border-bottom: 0.5px solid #f0f0e8; }
     .hidden { display: none; }
     .loading { text-align: center; padding: 20px; color: #666; font-size: 14px; }
@@ -73,7 +76,7 @@
     <label style="font-size:13px;color:#666;display:block;margin-bottom:6px">Describe what you want to test (plain English)</label>
     <textarea id="description" placeholder="e.g. Test that Google homepage loads with search box and links"></textarea>
     <div class="input-row">
-      <input type="text" id="apiUrl" value="https://google.com" placeholder="Enter URL"/>
+      <input type="text" id="apiUrl" value="https://books.toscrape.com" placeholder="Enter URL"/>
       <button id="runBtn" onclick="runTests()">Run Tests</button>
     </div>
     <div class="browser-row">
@@ -82,10 +85,13 @@
       <label><input type="checkbox" id="cb-firefox" value="firefox"> Firefox</label>
       <label><input type="checkbox" id="cb-webkit" value="webkit"> Safari</label>
     </div>
+    <div class="info-box" style="margin-top:10px">
+      Browser screenshots are available when running locally at http://localhost:3000
+    </div>
   </div>
 
   <div id="loading" class="card hidden">
-    <div class="loading"><span class="spinner"></span>Running API tests, opening browser, taking screenshots and analyzing with AI... please wait 30-60 seconds</div>
+    <div class="loading"><span class="spinner"></span>Running API tests and AI analysis... please wait</div>
   </div>
 
   <div id="errorBox" class="card hidden">
@@ -181,11 +187,17 @@
     document.getElementById('errorBox').classList.add('hidden');
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55000);
+
       const response = await fetch('/run-tests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, description, browsers })
+        body: JSON.stringify({ url, description, browsers }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeout);
 
       const data = await response.json();
 
@@ -236,11 +248,11 @@
               <div style="margin-bottom:12px">
                 <div style="font-size:12px;color:#666;margin-bottom:4px">Screenshot — click to enlarge</div>
                 <img src="${b.screenshot}" class="screenshot" onclick="window.open('${b.screenshot}','_blank')" title="Click to enlarge"/>
-              </div>` : '<p style="font-size:12px;color:#666;margin-bottom:8px">No screenshot available</p>'}
+              </div>` : ''}
             ${(b.results || []).map(r => `
-              <div class="result-item ${r.status === 'PASS' ? 'result-pass' : 'result-fail'}">
+              <div class="result-item ${r.status === 'PASS' ? 'result-pass' : r.status === 'INFO' ? 'result-info' : 'result-fail'}">
                 <div class="result-header">
-                  <span class="${r.status === 'PASS' ? 'badge-pass' : 'badge-fail'}">${r.status}</span>
+                  <span class="${r.status === 'PASS' ? 'badge-pass' : r.status === 'INFO' ? 'badge-info' : 'badge-fail'}">${r.status}</span>
                   <span class="result-name">${r.name}</span>
                 </div>
                 <div style="font-size:12px;color:#555;margin-top:4px;padding-left:44px">${r.detail || ''}</div>
@@ -256,7 +268,11 @@
       document.getElementById('results').classList.remove('hidden');
 
     } catch (error) {
-      document.getElementById('errorMsg').textContent = 'Connection error: ' + error.message;
+      if (error.name === 'AbortError') {
+        document.getElementById('errorMsg').textContent = 'Request timed out. The server took too long to respond. Please try again.';
+      } else {
+        document.getElementById('errorMsg').textContent = 'Connection error: ' + error.message;
+      }
       document.getElementById('errorBox').classList.remove('hidden');
       document.getElementById('loading').classList.add('hidden');
     }

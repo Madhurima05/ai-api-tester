@@ -1,3 +1,4 @@
+process.env.PLAYWRIGHT_BROWSERS_PATH = '/opt/render/.cache/ms-playwright';
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -15,18 +16,15 @@ app.use('/screenshots', express.static('screenshots'));
 if (!fs.existsSync('screenshots')) fs.mkdirSync('screenshots');
 if (!fs.existsSync('history.json')) fs.writeFileSync('history.json', '[]');
 
-async function runBrowserTests(url, description, browserName, engine) {
+async function runBrowserTests(url, browserName, engine) {
   const browserNames = { chromium: 'Chrome', firefox: 'Firefox', webkit: 'Safari' };
   let browser = null;
   const results = [];
 
   try {
     browser = await engine.launch({ headless: true });
-    const context = await browser.newContext({
-      viewport: { width: 1280, height: 800 }
-    });
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     const page = await context.newPage();
-
     await page.goto(url, { timeout: 20000, waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
@@ -47,7 +45,6 @@ async function runBrowserTests(url, description, browserName, engine) {
       name: 'Page has a body element',
       status: hasBody ? 'PASS' : 'FAIL',
       detail: hasBody ? 'Body element found' : 'Body element missing',
-      screenshot: '/' + screenshotPath,
       error: hasBody ? null : 'Body element not found'
     });
 
@@ -56,8 +53,7 @@ async function runBrowserTests(url, description, browserName, engine) {
       name: 'Page has navigation links',
       status: links > 0 ? 'PASS' : 'FAIL',
       detail: `Found ${links} links on the page`,
-      screenshot: '/' + screenshotPath,
-      error: links > 0 ? null : 'No links found on page'
+      error: links > 0 ? null : 'No links found'
     });
 
     const images = await page.$$eval('img', els => els.length);
@@ -65,8 +61,7 @@ async function runBrowserTests(url, description, browserName, engine) {
       name: 'Page has images',
       status: images > 0 ? 'PASS' : 'FAIL',
       detail: `Found ${images} images on the page`,
-      screenshot: '/' + screenshotPath,
-      error: images > 0 ? null : 'No images found on page'
+      error: images > 0 ? null : 'No images found'
     });
 
     const hasForm = await page.$('form, input, button') !== null;
@@ -74,25 +69,22 @@ async function runBrowserTests(url, description, browserName, engine) {
       name: 'Page has interactive elements',
       status: hasForm ? 'PASS' : 'FAIL',
       detail: hasForm ? 'Forms/inputs/buttons found' : 'No interactive elements found',
-      screenshot: '/' + screenshotPath,
       error: hasForm ? null : 'No interactive elements found'
     });
 
-    const hasH1 = await page.$('h1, h2') !== null;
+    const hasHeading = await page.$('h1, h2') !== null;
     results.push({
       name: 'Page has headings',
-      status: hasH1 ? 'PASS' : 'FAIL',
-      detail: hasH1 ? 'Headings found on page' : 'No headings found',
-      screenshot: '/' + screenshotPath,
-      error: hasH1 ? null : 'No headings found'
+      status: hasHeading ? 'PASS' : 'FAIL',
+      detail: hasHeading ? 'Headings found on page' : 'No headings found',
+      error: hasHeading ? null : 'No headings found'
     });
 
     const is404 = title.toLowerCase().includes('404') || title.toLowerCase().includes('not found');
     results.push({
       name: 'Page is not a 404 error',
       status: !is404 ? 'PASS' : 'FAIL',
-      detail: !is404 ? 'Page loaded correctly' : 'Page appears to be a 404 error',
-      screenshot: '/' + screenshotPath,
+      detail: !is404 ? 'Page loaded correctly' : 'Page appears to be a 404',
       error: !is404 ? null : 'Page title suggests 404 error'
     });
 
@@ -149,11 +141,11 @@ Example:
       if (!Array.isArray(testCases)) testCases = [];
     } catch (e) {
       testCases = [
-        { name: 'GET /posts returns 200', method: 'GET', path: '/posts', expectedStatus: 200, body: null, edgeCase: false },
-        { name: 'GET /users returns 200', method: 'GET', path: '/users', expectedStatus: 200, body: null, edgeCase: false },
-        { name: 'GET /posts/1 returns 200', method: 'GET', path: '/posts/1', expectedStatus: 200, body: null, edgeCase: false },
-        { name: 'Edge: GET /posts/999 returns 404', method: 'GET', path: '/posts/999', expectedStatus: 404, body: null, edgeCase: true },
-        { name: 'Edge: GET /invalid returns 404', method: 'GET', path: '/invalid-endpoint', expectedStatus: 404, body: null, edgeCase: true }
+        { name: 'GET homepage returns 200', method: 'GET', path: '/', expectedStatus: 200, body: null, edgeCase: false },
+        { name: 'GET invalid page returns 404', method: 'GET', path: '/invalid-page-xyz', expectedStatus: 404, body: null, edgeCase: true },
+        { name: 'GET sitemap returns 200', method: 'GET', path: '/sitemap.xml', expectedStatus: 200, body: null, edgeCase: false },
+        { name: 'Edge: GET with long path returns 404', method: 'GET', path: '/a/b/c/d/e/f/g', expectedStatus: 404, body: null, edgeCase: true },
+        { name: 'GET robots.txt returns 200', method: 'GET', path: '/robots.txt', expectedStatus: 200, body: null, edgeCase: false }
       ];
     }
 
@@ -196,7 +188,7 @@ Example:
     for (const browserName of selectedBrowsers) {
       const engine = browserEngines[browserName];
       if (!engine) continue;
-      const result = await runBrowserTests(url, description, browserName, engine);
+      const result = await runBrowserTests(url, browserName, engine);
       browserResults.push(result);
     }
 

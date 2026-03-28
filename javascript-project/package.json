@@ -1,22 +1,22 @@
 {
   "name": "ai-api-tester",
   "version": "1.0.0",
-  "description": "AI-powered API test automation",
+  "description": "AI-powered API and browser test automation",
   "scripts": {
-  "test": "jest --verbose",
-  "generate": "node tests/aiGenerator.js",
-  "start": "node server.js",
-  "build": "npx playwright install chromium"
-},
+    "test": "jest --verbose",
+    "generate": "node tests/aiGenerator.js",
+    "start": "node server.js",
+    "postinstall": "npx playwright install chromium"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "axios": "^1.6.0",
-    "cors": "^2.8.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.0",
-    "express": "^5.2.1",
-    "groq-sdk": "^1.1.1",
-    "openai": "^6.32.0",
-    "playwright": "^1.58.2"
+    "express": "^4.18.0",
+    "groq-sdk": "^0.9.0",
+    "openai": "^4.0.0",
+    "playwright": "^1.40.0"
   },
   "devDependencies": {
     "jest": "^29.0.0"

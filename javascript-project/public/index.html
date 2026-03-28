@@ -3,139 +3,267 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI API Tester</title>
+  <title>AI API Tester Pro</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; padding: 24px; }
-    .container { max-width: 800px; margin: 0 auto; }
-    .header { background: white; border-radius: 12px; border: 0.5px solid #e0e0d8; padding: 20px 24px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .header { background: white; border-radius: 12px; border: 0.5px solid #e0e0d8; padding: 16px 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
     .dot { width: 10px; height: 10px; border-radius: 50%; background: #1D9E75; }
-    .header h1 { font-size: 20px; font-weight: 500; flex: 1; }
-    .badge { font-size: 12px; background: #E6F1FB; color: #185FA5; padding: 3px 10px; border-radius: 12px; }
-    .card { background: white; border-radius: 12px; border: 0.5px solid #e0e0d8; padding: 20px 24px; margin-bottom: 16px; }
-    .input-row { display: flex; gap: 8px; margin-top: 8px; }
-    input[type=text] { flex: 1; padding: 10px 14px; border-radius: 8px; border: 0.5px solid #ccc; font-size: 14px; outline: none; }
+    .header h1 { font-size: 18px; font-weight: 500; flex: 1; }
+    .badge { font-size: 11px; background: #E6F1FB; color: #185FA5; padding: 3px 8px; border-radius: 10px; }
+    .card { background: white; border-radius: 12px; border: 0.5px solid #e0e0d8; padding: 16px 20px; margin-bottom: 12px; }
+    textarea { width: 100%; padding: 10px; border-radius: 8px; border: 0.5px solid #ccc; font-size: 13px; resize: none; height: 56px; font-family: inherit; outline: none; }
+    textarea:focus { border-color: #378ADD; }
+    input[type=text] { flex: 1; padding: 9px 12px; border-radius: 8px; border: 0.5px solid #ccc; font-size: 13px; outline: none; }
     input[type=text]:focus { border-color: #378ADD; }
-    button { padding: 10px 24px; border-radius: 8px; border: none; background: #185FA5; color: white; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .input-row { display: flex; gap: 8px; margin-top: 8px; }
+    .browser-row { display: flex; gap: 16px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+    .browser-row label { font-size: 13px; color: #444; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    button { padding: 9px 20px; border-radius: 8px; border: none; background: #185FA5; color: white; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
     button:hover { background: #0C447C; }
     button:disabled { background: #ccc; cursor: not-allowed; }
-    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
-    .metric { background: #f5f5f0; border-radius: 8px; padding: 14px; text-align: center; }
-    .metric-label { font-size: 13px; color: #666; margin-bottom: 4px; }
-    .metric-value { font-size: 24px; font-weight: 500; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+    .metric { background: #f5f5f0; border-radius: 8px; padding: 12px; text-align: center; }
+    .metric-label { font-size: 12px; color: #666; margin-bottom: 3px; }
+    .metric-value { font-size: 22px; font-weight: 500; }
     .pass-color { color: #0F6E56; }
     .fail-color { color: #993C1D; }
-    .result-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; }
+    .section-title { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+    .result-item { border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
     .result-pass { background: #E1F5EE; }
     .result-fail { background: #FAECE7; }
-    .badge-pass { font-size: 12px; font-weight: 600; color: #0F6E56; min-width: 40px; }
-    .badge-fail { font-size: 12px; font-weight: 600; color: #993C1D; min-width: 40px; }
-    .result-name { font-size: 13px; color: #1a1a1a; }
-    .ai-box { background: #EEEDFE; border-radius: 8px; padding: 14px 16px; margin-top: 12px; font-size: 13px; color: #3C3489; line-height: 1.6; }
-    .section-title { font-size: 14px; font-weight: 500; margin-bottom: 12px; }
+    .result-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .badge-pass { font-size: 11px; font-weight: 600; color: #0F6E56; min-width: 36px; }
+    .badge-fail { font-size: 11px; font-weight: 600; color: #993C1D; min-width: 36px; }
+    .result-name { font-size: 13px; flex: 1; }
+    .status-code { font-size: 11px; padding: 2px 7px; border-radius: 6px; }
+    .code-pass { background: #c8edd9; color: #0F6E56; }
+    .code-fail { background: #f5c4b3; color: #993C1D; }
+    .edge-badge { font-size: 10px; background: #EEEDFE; color: #534AB7; padding: 2px 6px; border-radius: 5px; }
+    .response-box { margin-top: 8px; background: #1a1a1a; border-radius: 6px; padding: 10px; font-size: 11px; font-family: monospace; color: #ccc; line-height: 1.6; overflow-x: auto; word-break: break-all; }
+    .error-highlight { background: #7f1d1d; color: #fca5a5; border-radius: 3px; padding: 0 3px; display: block; margin-bottom: 4px; }
+    .screenshot { width: 100%; border-radius: 8px; border: 0.5px solid #e0e0d8; margin-bottom: 10px; cursor: pointer; }
+    .ai-box { background: #EEEDFE; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #3C3489; line-height: 1.6; }
+    .error-box { background: #FAECE7; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #993C1D; }
+    .history-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #666; padding: 8px 0; border-bottom: 0.5px solid #f0f0e8; }
     .hidden { display: none; }
-    .loading { text-align: center; padding: 24px; color: #666; font-size: 14px; }
-    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #ccc; border-top-color: #185FA5; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
-    .error-box { background: #FAECE7; border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #993C1D; line-height: 1.6; }
+    .loading { text-align: center; padding: 20px; color: #666; font-size: 14px; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #ccc; border-top-color: #185FA5; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+    .tab { padding: 7px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: 0.5px solid #e0e0d8; background: white; color: #666; }
+    .tab.active { background: #185FA5; color: white; border-color: #185FA5; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .browser-section { margin-bottom: 20px; }
+    .browser-title { font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #1a1a1a; padding: 8px 12px; background: #f5f5f0; border-radius: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="dot"></div>
-      <h1>AI API Tester</h1>
-      <span class="badge">powered by Groq AI</span>
+<div class="container">
+
+  <div class="header">
+    <div class="dot"></div>
+    <h1>AI API Tester Pro</h1>
+    <span class="badge">API + UI + Cross Browser + Edge Cases</span>
+  </div>
+
+  <div class="card">
+    <label style="font-size:13px;color:#666;display:block;margin-bottom:6px">Describe what you want to test (plain English)</label>
+    <textarea id="description" placeholder="e.g. Test that Google homepage loads with search box and links"></textarea>
+    <div class="input-row">
+      <input type="text" id="apiUrl" value="https://google.com" placeholder="Enter URL"/>
+      <button id="runBtn" onclick="runTests()">Run Tests</button>
     </div>
-
-    <div class="card">
-      <label style="font-size:13px;color:#666">API Base URL</label>
-      <div class="input-row">
-        <input type="text" id="apiUrl" value="https://jsonplaceholder.typicode.com" placeholder="Enter API URL"/>
-        <button id="runBtn" onclick="runTests()">Run Tests</button>
-      </div>
-    </div>
-
-    <div id="loading" class="card hidden">
-      <div class="loading"><span class="spinner"></span>Running tests and analyzing with AI...</div>
-    </div>
-
-    <div id="errorBox" class="card hidden">
-      <div class="section-title">Error</div>
-      <div class="error-box" id="errorMsg"></div>
-    </div>
-
-    <div id="results" class="hidden">
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Total tests</div><div class="metric-value" id="total">0</div></div>
-        <div class="metric"><div class="metric-label">Passed</div><div class="metric-value pass-color" id="passed">0</div></div>
-        <div class="metric"><div class="metric-label">Failed</div><div class="metric-value fail-color" id="failed">0</div></div>
-        <div class="metric"><div class="metric-label">Pass rate</div><div class="metric-value" id="rate">0%</div></div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">Test results</div>
-        <div id="testList"></div>
-        <div class="section-title" style="margin-top:16px">AI analysis</div>
-        <div class="ai-box" id="aiAnalysis"></div>
-      </div>
+    <div class="browser-row">
+      <span style="font-size:13px;color:#666">Browsers:</span>
+      <label><input type="checkbox" id="cb-chromium" value="chromium" checked> Chrome</label>
+      <label><input type="checkbox" id="cb-firefox" value="firefox"> Firefox</label>
+      <label><input type="checkbox" id="cb-webkit" value="webkit"> Safari</label>
     </div>
   </div>
 
-  <script>
-    async function runTests() {
-      const url = document.getElementById('apiUrl').value;
-      const btn = document.getElementById('runBtn');
-      btn.disabled = true;
-      btn.textContent = 'Running...';
-      document.getElementById('loading').classList.remove('hidden');
-      document.getElementById('results').classList.add('hidden');
-      document.getElementById('errorBox').classList.add('hidden');
+  <div id="loading" class="card hidden">
+    <div class="loading"><span class="spinner"></span>Running API tests, opening browser, taking screenshots and analyzing with AI... please wait 30-60 seconds</div>
+  </div>
 
-      try {
-        const response = await fetch('/run-tests', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
+  <div id="errorBox" class="card hidden">
+    <div class="section-title">Error</div>
+    <div class="error-box" id="errorMsg"></div>
+  </div>
 
-        const data = await response.json();
+  <div id="results" class="hidden">
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Total tests</div><div class="metric-value" id="total">0</div></div>
+      <div class="metric"><div class="metric-label">Passed</div><div class="metric-value pass-color" id="passed">0</div></div>
+      <div class="metric"><div class="metric-label">Failed</div><div class="metric-value fail-color" id="failed">0</div></div>
+      <div class="metric"><div class="metric-label">Pass rate</div><div class="metric-value" id="rate">0%</div></div>
+    </div>
 
-        if (data.error) {
-          document.getElementById('errorMsg').textContent = data.error;
-          document.getElementById('errorBox').classList.remove('hidden');
-          document.getElementById('loading').classList.add('hidden');
-          btn.disabled = false;
-          btn.textContent = 'Run Tests';
-          return;
-        }
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('api')">API Tests</div>
+      <div class="tab" onclick="showTab('browser')">Browser Tests + Screenshots</div>
+      <div class="tab" onclick="showTab('history')">Test History</div>
+    </div>
 
-        document.getElementById('total').textContent = data.results.length;
-        document.getElementById('passed').textContent = data.passed;
-        document.getElementById('failed').textContent = data.failed;
-        document.getElementById('rate').textContent = Math.round((data.passed / data.results.length) * 100) + '%';
+    <div id="tab-api" class="tab-content active card">
+      <div class="section-title">API test results</div>
+      <div id="apiList"></div>
+    </div>
 
-        const list = document.getElementById('testList');
-        list.innerHTML = data.results.map(r => `
-          <div class="result-item ${r.status === 'PASS' ? 'result-pass' : 'result-fail'}">
-            <span class="${r.status === 'PASS' ? 'badge-pass' : 'badge-fail'}">${r.status}</span>
-            <span class="result-name">${r.name}${r.error ? ' — ' + r.error : ''}</span>
-          </div>
-        `).join('');
+    <div id="tab-browser" class="tab-content card">
+      <div class="section-title">Browser test results with screenshots</div>
+      <div id="browserList"></div>
+    </div>
 
-        document.getElementById('aiAnalysis').textContent = data.aiAnalysis;
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('results').classList.remove('hidden');
+    <div id="tab-history" class="tab-content card">
+      <div class="section-title">Test history</div>
+      <div id="historyList"><p style="font-size:13px;color:#666">Loading...</p></div>
+    </div>
 
-      } catch (error) {
-        document.getElementById('errorMsg').textContent = error.message;
+    <div class="card">
+      <div class="section-title">AI analysis</div>
+      <div class="ai-box" id="aiAnalysis"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function showTab(name) {
+    const names = ['api', 'browser', 'history'];
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    if (name === 'history') loadHistory();
+  }
+
+  async function loadHistory() {
+    try {
+      const res = await fetch('/history');
+      const history = await res.json();
+      const el = document.getElementById('historyList');
+      if (!history || history.length === 0) {
+        el.innerHTML = '<p style="font-size:13px;color:#666">No test history yet.</p>';
+        return;
+      }
+      el.innerHTML = history.map(h => `
+        <div class="history-item">
+          <span style="color:${h.failed > 0 ? '#993C1D' : '#0F6E56'};font-weight:500">${h.passed}/${h.total}</span>
+          <span style="flex:1;word-break:break-all">${h.url}</span>
+          <span style="white-space:nowrap">${h.browsers ? h.browsers.join(', ') : ''}</span>
+          <span style="white-space:nowrap">${new Date(h.timestamp).toLocaleTimeString()}</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      document.getElementById('historyList').innerHTML = '<p style="font-size:13px;color:#666">Could not load history.</p>';
+    }
+  }
+
+  async function runTests() {
+    const url = document.getElementById('apiUrl').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const browsers = ['chromium', 'firefox', 'webkit'].filter(b =>
+      document.getElementById('cb-' + b).checked
+    );
+
+    if (!url) { alert('Please enter a URL'); return; }
+    if (browsers.length === 0) { alert('Please select at least one browser'); return; }
+
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('results').classList.add('hidden');
+    document.getElementById('errorBox').classList.add('hidden');
+
+    try {
+      const response = await fetch('/run-tests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, description, browsers })
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        document.getElementById('errorMsg').textContent = data.error;
         document.getElementById('errorBox').classList.remove('hidden');
         document.getElementById('loading').classList.add('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Run Tests';
+        return;
       }
 
-      btn.disabled = false;
-      btn.textContent = 'Run Tests';
+      const apiResults = data.apiResults || [];
+      const browserResults = data.browserResults || [];
+      const passed = data.passed || 0;
+      const failed = data.failed || 0;
+
+      document.getElementById('total').textContent = apiResults.length;
+      document.getElementById('passed').textContent = passed;
+      document.getElementById('failed').textContent = failed;
+      document.getElementById('rate').textContent = apiResults.length > 0
+        ? Math.round((passed / apiResults.length) * 100) + '%'
+        : '0%';
+
+      document.getElementById('apiList').innerHTML = apiResults.length > 0
+        ? apiResults.map(r => `
+          <div class="result-item ${r.status === 'PASS' ? 'result-pass' : 'result-fail'}">
+            <div class="result-header">
+              <span class="${r.status === 'PASS' ? 'badge-pass' : 'badge-fail'}">${r.status}</span>
+              <span class="result-name">${r.name}</span>
+              ${r.edgeCase ? '<span class="edge-badge">edge case</span>' : ''}
+              <span class="status-code ${r.status === 'PASS' ? 'code-pass' : 'code-fail'}">${r.actualStatus}</span>
+            </div>
+            ${r.status === 'FAIL' ? `
+              <div class="response-box">
+                <span class="error-highlight">Error: ${r.error || 'Unknown error'}</span>
+                ${r.responseData ? r.responseData : ''}
+              </div>` : ''}
+          </div>
+        `).join('')
+        : '<p style="font-size:13px;color:#666">No API results.</p>';
+
+      document.getElementById('browserList').innerHTML = browserResults.length > 0
+        ? browserResults.map(b => `
+          <div class="browser-section">
+            <div class="browser-title">${b.browser || 'Browser'}</div>
+            ${b.screenshot ? `
+              <div style="margin-bottom:12px">
+                <div style="font-size:12px;color:#666;margin-bottom:4px">Screenshot — click to enlarge</div>
+                <img src="${b.screenshot}" class="screenshot" onclick="window.open('${b.screenshot}','_blank')" title="Click to enlarge"/>
+              </div>` : '<p style="font-size:12px;color:#666;margin-bottom:8px">No screenshot available</p>'}
+            ${(b.results || []).map(r => `
+              <div class="result-item ${r.status === 'PASS' ? 'result-pass' : 'result-fail'}">
+                <div class="result-header">
+                  <span class="${r.status === 'PASS' ? 'badge-pass' : 'badge-fail'}">${r.status}</span>
+                  <span class="result-name">${r.name}</span>
+                </div>
+                <div style="font-size:12px;color:#555;margin-top:4px;padding-left:44px">${r.detail || ''}</div>
+                ${r.error ? `<div style="font-size:12px;color:#993C1D;padding-left:44px;margin-top:2px">${r.error}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `).join('')
+        : '<p style="font-size:13px;color:#666">No browser results.</p>';
+
+      document.getElementById('aiAnalysis').textContent = data.aiAnalysis || 'No analysis available.';
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('results').classList.remove('hidden');
+
+    } catch (error) {
+      document.getElementById('errorMsg').textContent = 'Connection error: ' + error.message;
+      document.getElementById('errorBox').classList.remove('hidden');
+      document.getElementById('loading').classList.add('hidden');
     }
-  </script>
+
+    btn.disabled = false;
+    btn.textContent = 'Run Tests';
+  }
+</script>
 </body>
 </html>

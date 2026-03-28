@@ -13,6 +13,8 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/screenshots', express.static('screenshots'));
 
+const IS_RENDER = !!process.env.RENDER;
+
 if (!fs.existsSync('screenshots')) fs.mkdirSync('screenshots');
 if (!fs.existsSync('history.json')) fs.writeFileSync('history.json', '[]');
 
@@ -183,13 +185,26 @@ Example:
       }
     }
 
-    const browserEngines = { chromium, firefox, webkit };
     const browserResults = [];
-    for (const browserName of selectedBrowsers) {
-      const engine = browserEngines[browserName];
-      if (!engine) continue;
-      const result = await runBrowserTests(url, browserName, engine);
-      browserResults.push(result);
+    if (IS_RENDER) {
+      browserResults.push({
+        browser: 'Note',
+        results: [{
+          name: 'Browser tests available locally',
+          status: 'INFO',
+          detail: 'Run locally with node server.js to see real browser screenshots',
+          error: null
+        }],
+        screenshot: null
+      });
+    } else {
+      const browserEngines = { chromium, firefox, webkit };
+      for (const browserName of selectedBrowsers) {
+        const engine = browserEngines[browserName];
+        if (!engine) continue;
+        const result = await runBrowserTests(url, browserName, engine);
+        browserResults.push(result);
+      }
     }
 
     const passed = apiResults.filter(r => r.status === 'PASS').length;

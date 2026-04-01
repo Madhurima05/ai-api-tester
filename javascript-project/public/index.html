@@ -48,7 +48,6 @@
     .screenshot { width: 100%; border-radius: 8px; border: 0.5px solid #e0e0d8; margin-bottom: 10px; cursor: pointer; }
     .ai-box { background: #EEEDFE; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #3C3489; line-height: 1.6; }
     .error-box { background: #FAECE7; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #993C1D; }
-    .info-box { background: #EEEDFE; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #534AB7; margin-bottom: 8px; }
     .history-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #666; padding: 8px 0; border-bottom: 0.5px solid #f0f0e8; }
     .hidden { display: none; }
     .loading { text-align: center; padding: 20px; color: #666; font-size: 14px; }
@@ -74,9 +73,9 @@
 
   <div class="card">
     <label style="font-size:13px;color:#666;display:block;margin-bottom:6px">Describe what you want to test (plain English)</label>
-    <textarea id="description" placeholder="e.g. Test that Google homepage loads with search box and links"></textarea>
+    <textarea id="description" placeholder="e.g. Test that BankSmart login works with valid and invalid credentials"></textarea>
     <div class="input-row">
-      <input type="text" id="apiUrl" value="https://books.toscrape.com" placeholder="Enter URL"/>
+      <input type="text" id="apiUrl" value="https://banksmart.onrender.com" placeholder="Enter URL"/>
       <button id="runBtn" onclick="runTests()">Run Tests</button>
     </div>
     <div class="browser-row">
@@ -85,13 +84,10 @@
       <label><input type="checkbox" id="cb-firefox" value="firefox"> Firefox</label>
       <label><input type="checkbox" id="cb-webkit" value="webkit"> Safari</label>
     </div>
-    <div class="info-box" style="margin-top:10px">
-      Browser screenshots are available when running locally at http://localhost:3000
-    </div>
   </div>
 
   <div id="loading" class="card hidden">
-    <div class="loading"><span class="spinner"></span>Running API tests and AI analysis... please wait</div>
+    <div class="loading"><span class="spinner"></span>Running API tests, opening browsers, taking screenshots and analyzing with AI... please wait 30-60 seconds</div>
   </div>
 
   <div id="errorBox" class="card hidden">
@@ -198,7 +194,6 @@
       });
 
       clearTimeout(timeout);
-
       const data = await response.json();
 
       if (data.error) {
@@ -269,7 +264,7 @@
 
     } catch (error) {
       if (error.name === 'AbortError') {
-        document.getElementById('errorMsg').textContent = 'Request timed out. The server took too long to respond. Please try again.';
+        document.getElementById('errorMsg').textContent = 'Request timed out. Please try again.';
       } else {
         document.getElementById('errorMsg').textContent = 'Connection error: ' + error.message;
       }
